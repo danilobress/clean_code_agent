@@ -1,6 +1,6 @@
 """Módulo de triagem e priorização de chamados para Service Desk."""
 
-PESOS_PRIORIDADE: dict[str, int] = {
+ORDEM_PRIORIDADE: dict[str, int] = {
     "Alta": 1,
     "Média": 2,
     "Baixa": 3,
@@ -11,7 +11,7 @@ class ValidadorChamado:
     """Validador responsável pela integridade e conformidade dos dados de um chamado."""
 
     @staticmethod
-    def validar(chamado: dict) -> None:
+    def validar(chamado: dict[str, object]) -> None:
         """Valida a presença de campos obrigatórios e a consistência dos dados do chamado.
 
         Args:
@@ -31,7 +31,7 @@ class ValidadorChamado:
         if prioridade is None:
             raise ValueError("Prioridade nula")
 
-        if prioridade not in PESOS_PRIORIDADE:
+        if not isinstance(prioridade, str) or prioridade not in ORDEM_PRIORIDADE:
             raise ValueError(f"Prioridade desconhecida: {prioridade}")
 
 
@@ -59,5 +59,5 @@ def priorizar_chamados(chamados: list[dict]) -> list[dict]:
 
     return sorted(
         chamados,
-        key=lambda chamado: PESOS_PRIORIDADE[chamado["prio"]],
+        key=lambda item: ORDEM_PRIORIDADE[item["prio"]],
     )

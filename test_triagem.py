@@ -5,31 +5,14 @@ import pytest
 from triagem import priorizar_chamados
 
 
-@pytest.fixture
-def chamados_mistos() -> list[dict]:
-    """Fixture que fornece uma lista de chamados com prioridades variadas."""
-    return [
+def test_dado_chamados_com_prioridades_diferentes_quando_priorizar_entao_ordena_por_prioridade() -> None:
+    """Valida que chamados de prioridade Alta precedem os de prioridade Baixa."""
+    # Arrange
+    lista_chamados = [
         {"id": 1, "prio": "Baixa"},
         {"id": 2, "prio": "Alta"},
         {"id": 3, "prio": "Alta"},
     ]
-
-
-@pytest.fixture
-def chamados_mesma_prioridade() -> list[dict]:
-    """Fixture que fornece chamados com a mesma prioridade para validação de estabilidade."""
-    return [
-        {"id": 1, "prio": "Média"},
-        {"id": 2, "prio": "Média"},
-    ]
-
-
-def test_dado_chamados_com_prioridades_diferentes_quando_priorizar_entao_ordena_por_prioridade(
-    chamados_mistos: list[dict],
-) -> None:
-    """Valida a ordenação correta de acordo com a hierarquia Alta > Média > Baixa."""
-    # Arrange
-    lista_chamados = chamados_mistos
 
     # Act
     resultado = priorizar_chamados(lista_chamados)
@@ -43,12 +26,13 @@ def test_dado_chamados_com_prioridades_diferentes_quando_priorizar_entao_ordena_
     assert resultado == esperado
 
 
-def test_dado_chamados_com_mesma_prioridade_quando_priorizar_entao_preserva_ordem_de_chegada(
-    chamados_mesma_prioridade: list[dict],
-) -> None:
+def test_dado_chamados_com_mesma_prioridade_quando_priorizar_entao_preserva_ordem_de_chegada() -> None:
     """Valida a estabilidade da ordenação mantendo a ordem original para prioridades iguais."""
     # Arrange
-    lista_chamados = chamados_mesma_prioridade
+    lista_chamados = [
+        {"id": 1, "prio": "Média"},
+        {"id": 2, "prio": "Média"},
+    ]
 
     # Act
     resultado = priorizar_chamados(lista_chamados)
@@ -57,6 +41,33 @@ def test_dado_chamados_com_mesma_prioridade_quando_priorizar_entao_preserva_orde
     esperado = [
         {"id": 1, "prio": "Média"},
         {"id": 2, "prio": "Média"},
+    ]
+    assert resultado == esperado
+
+
+def test_dado_prioridades_intercaladas_quando_priorizar_entao_ordena_alta_media_baixa_preservando_ordem_de_chegada() -> None:
+    """Valida a hierarquia Alta > Média > Baixa e a estabilidade com prioridades intercaladas."""
+    # Arrange
+    lista_chamados = [
+        {"id": 1, "prio": "Baixa"},
+        {"id": 2, "prio": "Média"},
+        {"id": 3, "prio": "Alta"},
+        {"id": 4, "prio": "Baixa"},
+        {"id": 5, "prio": "Média"},
+        {"id": 6, "prio": "Alta"},
+    ]
+
+    # Act
+    resultado = priorizar_chamados(lista_chamados)
+
+    # Assert
+    esperado = [
+        {"id": 3, "prio": "Alta"},
+        {"id": 6, "prio": "Alta"},
+        {"id": 2, "prio": "Média"},
+        {"id": 5, "prio": "Média"},
+        {"id": 1, "prio": "Baixa"},
+        {"id": 4, "prio": "Baixa"},
     ]
     assert resultado == esperado
 
@@ -68,6 +79,16 @@ def test_dado_prioridade_desconhecida_quando_priorizar_entao_lanca_value_error()
 
     # Act & Assert
     with pytest.raises(ValueError, match=r"^Prioridade desconhecida: Urgente$"):
+        priorizar_chamados(lista_chamados)
+
+
+def test_dado_prioridade_com_tipo_invalido_quando_priorizar_entao_lanca_value_error() -> None:
+    """Valida o lançamento de ValueError quando a prioridade não for do tipo string (ex: lista)."""
+    # Arrange
+    lista_chamados = [{"id": 1, "prio": ["Alta"]}]
+
+    # Act & Assert
+    with pytest.raises(ValueError, match=r"^Prioridade desconhecida: \['Alta'\]$"):
         priorizar_chamados(lista_chamados)
 
 
